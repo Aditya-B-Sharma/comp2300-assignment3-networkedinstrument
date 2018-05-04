@@ -44,7 +44,7 @@ void init(void)
   ******************************************************************************
   */
 
-void SysTick_Handler(void)
+__weak void SysTick_Handler(void)
 {
   HAL_IncTick();
 }
