@@ -14,34 +14,57 @@
   rsb \Rd, \Rn
 .endm
 
-@ Generic RCC AxB2ENR macros
-.macro RCC_AxB2ENR_write HorP position value
+.macro RCC_AHB2ENR_write position value
     ldr r0, =ADR_RCC
-    ldr r1, =OFS_RCC_A\HorP\()B2ENR
+    ldr r1, =OFS_RCC_AHB2ENR
     ldr r2, =\position
     ldr r3, =\value
     bl write_bit
 .endm
 
-.macro RCC_AxB2ENR_set HorP position
+.macro RCC_AHB2ENR_set position
     ldr r0, =ADR_RCC
-    ldr r1, =OFS_RCC_A\HorP\()B2ENR
+    ldr r1, =OFS_RCC_AHB2ENR
     ldr r2, =\position
     bl set_bit
 .endm
 
-.macro RCC_AxB2ENR_clear HorP position
+.macro RCC_AHB2ENR_clear position
     ldr r0, =ADR_RCC
-    ldr r1, =OFS_RCC_A\HorP\()B2ENR
+    ldr r1, =OFS_RCC_AHB2ENR
+    ldr r2, =\position
+    bl clear_bit
+.endm
+
+.macro RCC_APB2ENR_write position value
+    ldr r0, =ADR_RCC
+    ldr r1, =OFS_RCC_APB2ENR
+    ldr r2, =\position
+    ldr r3, =\value
+    bl write_bit
+.endm
+
+.macro RCC_APB2ENR_set position
+    ldr r0, =ADR_RCC
+    ldr r1, =OFS_RCC_APB2ENR
+    ldr r2, =\position
+    bl set_bit
+.endm
+
+.macro RCC_APB2ENR_clear position
+    ldr r0, =ADR_RCC
+    ldr r1, =OFS_RCC_APB2ENR
     ldr r2, =\position
     bl clear_bit
 .endm
 
 @ GPIO macros
 .macro GPIOx_clock_enable port
-    RCC_AxB2ENR_set H IDX_GPIO\port
+    RCC_AHB2ENR_set IDX_GPIO\port
 .endm
 
+@ note that these arithmetic and shift expressions (e.g. +, <<)
+@ are evaluated at compile time!
 .macro GPIOx_MODER_write port pin mode
     ldr r0, =(ADR_GPIO\port + 0x0)
     ldr r1, =\mode
@@ -109,41 +132,53 @@
     bl clear_bit
 .endm
 
-.macro SYSCFG_EXTIxCR_write port pin
-    ldr r0, =IDX_GPIO\port
-    ldr r1, =\pin
-    bl SYSCFG_EXTIxCR_write
-.endm
-
 @ Interrupt related
 
 @ EXTI
 
+.macro SYSCFG_EXTIxCR_write port pin
+    @ calculate the address of the register to write to (e.g. SYSCFG_EXTICR*n*)
+    ldr r0, =(ADR_SYSCFG + 0x8 + 4 * (\pin / 4))
+    ldr r1, [r0]
+    @ insert port index (i.e. A=0, B=1, etc.) to appropriate bits in SYSCFG_EXTICR*n*
+    ldr r2, =IDX_GPIO\port
+    bfi r1, r2, 4 * (\pin % 4), 3
+    str r1, [r0]
+.endm
+
 @ enable interrupt in EXTI interrupt mask register
 .macro EXTI_IMR_enable number
     ldr r0, =ADR_EXTI
-    mov r1, 0
+    ldr r1, =OFS_EXTI_IMR1
     ldr r2, =\number
     bl set_bit
 .endm
 
 .macro EXTI_IMR_disable number
     ldr r0, =ADR_EXTI
-    mov r1, 0
+    ldr r1, =OFS_EXTI_IMR1
     ldr r2, =\number
     bl clear_bit
 .endm
 
 .macro EXTI_set_rising_edge_trigger pin
     ldr r0, =ADR_EXTI
-    mov r1, 0x8
+    ldr r1, =OFS_EXTI_RTSR1
     ldr r2, =\pin
     bl set_bit
 .endm
 
 .macro EXTI_set_falling_edge_trigger pin
     ldr r0, =ADR_EXTI
-    mov r1, 0xC
+    ldr r1, =OFS_EXTI_FTSR1
+    ldr r2, =\pin
+    bl set_bit
+.endm
+
+@ to trigger a software interrupt
+.macro EXTI_PR_set_pending pin
+    ldr r0, =ADR_EXTI
+    ldr r1, =OFS_EXTI_SWIER1
     ldr r2, =\pin
     bl set_bit
 .endm
@@ -151,17 +186,9 @@
 @ to see if an interrupt has been triggered
 .macro EXTI_PR_check_pending pin
     ldr r0, =ADR_EXTI
-    ldr r1, =0x14
+    ldr r1, =OFS_EXTI_PR1
     ldr r2, =\pin
     bl read_bit
-.endm
-
-@ to trigger a software interrupt
-.macro EXTI_PR_set_pending pin
-    ldr r0, =ADR_EXTI
-    ldr r1, =0x10
-    ldr r2, =\pin
-    bl set_bit
 .endm
 
 @ to clear an already-triggered interrupt
@@ -169,9 +196,10 @@
 @  you need to *set* the bit in EXTI_PR1)
 .macro EXTI_PR_clear_pending pin
     ldr r0, =ADR_EXTI
-    ldr r1, =0x14
-    ldr r2, =\pin
-    bl set_bit
+    ldr r1, =OFS_EXTI_PR1
+    mov r2, 1
+    lsl r2, \pin
+    str r2, [r0, r1]
 .endm
 
 @ NVIC
@@ -190,50 +218,28 @@
     ldr r1, =OFS_NVIC_\register\()0
     ldr r2, =(4 * (\position / 32))
     add r1, r2
-    ldr r2, =(\position % 32)
-    bl set_bit
+    ldr r2, =(1 << (\position % 32))
+    str r2, [r0, r1]
 .endm
-
-.macro NVIC_EXTI_enable pin
-    mov r0, \pin
-    bl NVIC_EXTI_enable
-.endm
-
-.macro NVIC_EXTI_disable pin
-    mov r0, \pin
-    bl NVIC_EXTI_disable
-.endm
-
-@ set NVIC interrupt priority
-.macro NVIC_IPR_set_priority position priority
-    ldr r0, =\position
-    ldr r0, =\priority
-    bl NVIC_IPR_set_priority
-.endm
-
-@ set system handler priorities (e.g. SysTick, PendSV, SVCall)
-.macro SHPR_set_priority position priority
-    ldr r0, =\position
-    ldr r0, =\priority
-    bl SHPR_set_priority
-.endm
-
-@ Other high level macros
 
 @ high-level helper macros
 
-.macro declare_output_pin port pin
+.macro GPIO_configure_output_pin port pin
   GPIOx_MODER_write \port, \pin, 0b01
 .endm
 
-.macro declare_input_pin port pin
+.macro GPIO_configure_input_pin port pin
   GPIOx_MODER_write \port, \pin, 0b00
   GPIOx_PUPDR_write \port, \pin, 0b10
 .endm
 
-@ this one also triggers the interrupts
-.macro declare_input_pin_it port pin
-  declare_input_pin \port, \pin
-  SYSCFG_EXTIxCR_write \port, \pin @ set port as source for this interrupt
+@ this one also enables the interrupts, although it's up to you to
+@ make sure the appropriate EXTI interrupt is enabled in the NVIC
+@ and that the handler function exists
+.macro GPIO_configure_input_pin_it port pin
+  GPIO_configure_input_pin \port, \pin
+  ldr r0, =IDX_GPIO\port
+  mov r1, \pin
+  SYSCFG_EXTIxCR_write \port \pin
   EXTI_IMR_enable \pin
 .endm

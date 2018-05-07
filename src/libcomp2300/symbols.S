@@ -25,9 +25,12 @@
 .global ADR_GPIOF       @ 0x48001400
 .global ADR_GPIOG       @ 0x48001800
 .global ADR_GPIOH       @ 0x48001C00
+.global ADR_TIM7        @ 0x40001400
+.global ADR_DBGMCU_APB1FZR1   @ 0xE0042008
 
 @ offsets (OFS = offset)
 .global OFS_RCC_AHB2ENR  @ 0x4C
+.global OFS_RCC_APB1ENR  @ 0x58
 .global OFS_RCC_APB2ENR  @ 0x60
 .global OFS_GPIOx_MODER  @ 0x00
 .global OFS_GPIOx_PUPDR  @ 0x0C
@@ -48,6 +51,14 @@
 .global OFS_EXTI_RTSR2   @ 0x28
 .global OFS_EXTI_FTSR2   @ 0x2C
 .global OFS_EXTI_PR2     @ 0x34
+.global OFS_TIMx_CR1     @ 0x0
+.global OFS_TIMx_CR2     @ 0x4
+.global OFS_TIMx_DIER    @ 0xC
+.global OFS_TIMx_SR      @ 0x10
+.global OFS_TIMx_EGR     @ 0x14
+.global OFS_TIMx_CNT     @ 0x24
+.global OFS_TIMx_PSC     @ 0x28
+.global OFS_TIMx_ARR     @ 0x2C
 
 @ RCC port pin indices (IDX = index)
 .global IDX_GPIOA  @ 0
@@ -82,8 +93,11 @@
 .set ADR_GPIOF,     0x48001400
 .set ADR_GPIOG,     0x48001800
 .set ADR_GPIOH,     0x48001C00
+.set ADR_TIM7,      0x40001400
+.set ADR_DBGMCU_APB1FZR1, 0xE0042008
 
 .set OFS_RCC_AHB2ENR, 0x4C
+.set OFS_RCC_APB1ENR, 0x58
 .set OFS_RCC_APB2ENR, 0x60
 .set OFS_GPIOx_MODER, 0x00
 .set OFS_GPIOx_PUPDR, 0x0C
@@ -104,6 +118,14 @@
 .set OFS_EXTI_RTSR2,  0x28
 .set OFS_EXTI_FTSR2,  0x2C
 .set OFS_EXTI_PR2,    0x34
+.set OFS_TIMx_CR1,    0x0
+.set OFS_TIMx_CR2,    0x4
+.set OFS_TIMx_DIER,   0xC
+.set OFS_TIMx_SR,     0x10
+.set OFS_TIMx_EGR,    0x14
+.set OFS_TIMx_CNT,    0x24
+.set OFS_TIMx_PSC,    0x28
+.set OFS_TIMx_ARR,    0x2C
 
 .set IDX_GPIOA, 0
 .set IDX_GPIOB, 1
