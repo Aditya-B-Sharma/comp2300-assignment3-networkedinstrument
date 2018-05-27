@@ -75,6 +75,19 @@ tim7_init:
   ldr r1, =OFS_TIMx_ARR
   strh r5, [r0, r1]
 
+  @ TIM7_EGR (Section 29.4.5)
+  ldr r0, =ADR_TIM7
+  ldr r1, =0x14
+  ldr r2, [r0, r1]
+  orr r2, 0b1
+  str r2, [r0, r1]
+
+  @ clear interrupt (Section 29.4.4)
+  ldr r0, =ADR_TIM7
+  ldr r1, =OFS_TIMx_SR
+  mov r2, 0
+  bl clear_bit
+
   @ enable timer 7  (Section 29.4.1s)
   ldr r0, =ADR_TIM7
   ldr r1, =OFS_TIMx_CR1
