@@ -69,9 +69,16 @@ main:
   mov r1, 2000
   bl tim7_init
 
+  b receiver
+
+
 
 .size main, .-main
-
+receiver:                                      @ Continually check if port is triggered
+    GPIOx_IDR_read H 0
+    beq receiver
+    bl wave_play_next_sample                     @ If triggered, play sound
+    b receiver
 
 
 
@@ -81,17 +88,13 @@ main:
 
 EXTI0_IRQHandler:
   push {lr}
-  GPIOx_IDR_read H, 0
-  beq nothing
+  GPIOx_IDR_read H 0
+  beq next
   bne playsound
 
-  nothing:
-    nop
-    b next 
   
   playsound:
     bl wave_play_next_sample
-    b next 
 
   next:
 
@@ -159,89 +162,55 @@ push {lr}
 @ --parameters--
 @ none
 TIM7_IRQHandler:
+  
   push {lr}
 
   GPIOx_ODR_toggle E, 12
 
-  ldr r12, =offset
-  ldr r11, [r12] 
+  ldr r11, =offset
+  ldr r10, [r11] 
 
-  add r6, r11, 4
+  add r5, r10, 4
 
-  str r6, [r12]
+  str r5, [r11]
  
-  ldr r10, =sender_indices
-  ldr r9, [r10]
+  ldr r9, =sender_indices
+  ldr r8, [r9]
 
-  ldr r8, [r10, r11]
+  ldr r7, [r9, r10]
 
-  ldr r7, [r10, r6]
+  ldr r6, [r9, r5]
 
-  cmp r8, 1
+  cmp r7, 1
   beq checkifnextiszero
   bne dontcheck
 
   checkifnextiszero:
-    cmp r7, 0
+    cmp r6, 0
     beq resetoffset
     bne dontcheck
 
   resetoffset:
-    mov r5, 0
-    str r5, [r12]
+    mov r4, 0
+    str r4, [r11]
 
   dontcheck:
-    sub r5, r7, r8
-    cmp r5, 0
+    sub r4, r6, r7
+    cmp r4, 0
     beq end_tim7
-    cmp r5, 1
+    cmp r4, 1
     beq sendonesignal
-    bne sendmultiple
+    bne sendonesignal
 
 
   sendonesignal:
+   
     GPIOx_ODR_set E, 13
     GPIOx_ODR_clear E, 13
     b end_tim7
 
   sendmultiple:
-    GPIOx_ODR_toggle E, 13
-    GPIOx_ODR_toggle E, 13
-    GPIOx_ODR_toggle E, 13
-    GPIOx_ODR_toggle E, 13
-    GPIOx_ODR_toggle E, 13
-    GPIOx_ODR_toggle E, 13
-
-
-
-  @ @ Your interrupt handler code goes here
-  @ ldr r11, =on_off_check
-  @ ldr r12, [r11]
-  @ cmp r12, 0
-  @ beq set_on
-  @ bne set_off
-
-  @ set_on:
-  @ @@ send rising edge signal here
-  @ GPIOx_ODR_set E, 12
-  @ mov r12, 1
-  @ str r12, [r11] 
-  @ GPIOx_ODR_clear E, 13
-  @ b cont
-
-  @ set_off:
-  @ @@send falling edge signal here
-  @ GPIOx_ODR_clear E, 12
-  @ mov r12, 0
-  @ str r12, [r11] 
-  @ @@send pitch change here
-  @ GPIOx_ODR_set E, 13
-  
-  @ b cont 
-
-  @ cont:
-  @ ldr r11, =on_off_check
-  @ ldr r12, [r11]
+    mov r11, #6
 
   end_tim7:
 
@@ -250,11 +219,8 @@ TIM7_IRQHandler:
     ldr r1, =OFS_TIMx_SR
     mov r2, 0
     bl clear_bit
-
-  pop {lr}
-
-
-  bx lr
+    pop {lr}
+    bx lr
 .size TIM7_IRQHandler, .-TIM7_IRQHandler  
 
 
