@@ -161,92 +161,92 @@ push {lr}
 TIM7_IRQHandler:
   push {lr}
 
-  GPIOx_ODR_toggle E, 12
+  @ GPIOx_ODR_toggle E, 12
 
-  ldr r12, =offset
-  ldr r11, [r12] 
+  @ ldr r12, =offset
+  @ ldr r11, [r12] 
 
-  add r6, r11, 4
+  @ add r6, r11, 4
 
-  str r6, [r12]
+  @ str r6, [r12]
  
-  ldr r10, =sender_indices
-  ldr r9, [r10]
+  @ ldr r10, =sender_indices
+  @ ldr r9, [r10]
 
-  ldr r8, [r10, r11]
+  @ ldr r8, [r10, r11]
 
-  ldr r7, [r10, r6]
+  @ ldr r7, [r10, r6]
 
-  cmp r8, 1
-  beq checkifnextiszero
-  bne dontcheck
+  @ cmp r8, 1
+  @ beq checkifnextiszero
+  @ bne dontcheck
 
-  checkifnextiszero:
-  cmp r7, 0
-  beq resetoffset
-  bne dontcheck
+  @ checkifnextiszero:
+  @ cmp r7, 0
+  @ beq resetoffset
+  @ bne dontcheck
 
-  resetoffset:
-  mov r5, 0
-  str r5, [r12]
+  @ resetoffset:
+  @ mov r5, 0
+  @ str r5, [r12]
 
-  dontcheck:
-  sub r5, r7, r8
-  cmp r5, 0
-  beq end_tim7
-  cmp r5, 1
-  beq sendonesignal
-  bne sendmultiple
-
-
-  sendonesignal:
-  push {lr}
-  GPIOx_ODR_toggle E, 13
-  pop {lr}
-  b end_tim7
-
-  sendmultiple:
-  push {lr}
-  GPIOx_ODR_toggle E, 13
-  GPIOx_ODR_toggle E, 13
-  GPIOx_ODR_toggle E, 13
-  GPIOx_ODR_toggle E, 13
-  GPIOx_ODR_toggle E, 13
-  GPIOx_ODR_toggle E, 13
-  pop {lr}
+  @ dontcheck:
+  @ sub r5, r7, r8
+  @ cmp r5, 0
+  @ beq end_tim7
+  @ cmp r5, 1
+  @ beq sendonesignal
+  @ bne sendmultiple
 
 
+  @ sendonesignal:
+  @ push {lr}
+  @ GPIOx_ODR_toggle E, 13
+  @ pop {lr}
+  @ b end_tim7
 
-  @ @ Your interrupt handler code goes here
-  @ ldr r11, =on_off_check
-  @ ldr r12, [r11]
-  @ cmp r12, 0
-  @ beq set_on
-  @ bne set_off
+  @ sendmultiple:
+  @ push {lr}
+  @ GPIOx_ODR_toggle E, 13
+  @ GPIOx_ODR_toggle E, 13
+  @ GPIOx_ODR_toggle E, 13
+  @ GPIOx_ODR_toggle E, 13
+  @ GPIOx_ODR_toggle E, 13
+  @ GPIOx_ODR_toggle E, 13
+  @ pop {lr}
 
-  @ set_on:
-  @ @@ send rising edge signal here
-  @ GPIOx_ODR_set E, 12
-  @ mov r12, 1
-  @ str r12, [r11] 
-  @ GPIOx_ODR_clear E, 13
-  @ b cont
 
-  @ set_off:
-  @ @@send falling edge signal here
-  @ GPIOx_ODR_clear E, 12
-  @ mov r12, 0
-  @ str r12, [r11] 
-  @ @@send pitch change here
-  @ GPIOx_ODR_set E, 13
+
+  @ Your interrupt handler code goes here
+  ldr r11, =on_off_check
+  ldr r12, [r11]
+  cmp r12, 0
+  beq set_on
+  bne set_off
+
+  set_on:
+  @@ send rising edge signal here
+  GPIOx_ODR_set E, 12
+  mov r12, 1
+  str r12, [r11] 
+  GPIOx_ODR_clear E, 13
+  b cont
+
+  set_off:
+  @@send falling edge signal here
+  GPIOx_ODR_clear E, 12
+  mov r12, 0
+  str r12, [r11] 
+  @@send pitch change here
+  GPIOx_ODR_set E, 13
   
-  @ b cont 
+  b cont 
 
-  @ cont:
-  @ ldr r11, =on_off_check
-  @ ldr r12, [r11]
+  cont:
+  ldr r11, =on_off_check
+  ldr r12, [r11]
 
-  end_tim7:
+ @ end_tim7:
 
   @ Clear interrupt (Section 29.4.4)
   ldr r0, =ADR_TIM7
