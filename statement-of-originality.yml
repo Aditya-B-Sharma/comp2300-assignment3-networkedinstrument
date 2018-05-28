@@ -6,18 +6,20 @@ declaration: >-
   I declare that apart from the collaborators everything I have submitted in this assignment is entirely my
   own work, with the following exceptions:
 
-name:
-uid:
+name: Aditya Sharma
+uid: u6051965
 
 # add as many "name+comment" entries as necessary
 collaboration:
-  - name:
-    comment: >-
+  - name: Khamis Buol
+    comment: debugging help (making sure I had no registers overwriting each other)
+  - name: Brent Schuetze
+    comment: used piazza code to define priority of tim7 handler (https://piazza.com/class/jcl9myd7deu17x?cid=748)
       
 
 # add as many "url+licence+comment" entries as necessary
 code:
-  - comment:
-    url:
-    licence:
+  - comment: none
+    url: none
+    licence: none
 

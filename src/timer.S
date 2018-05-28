@@ -110,26 +110,15 @@ tim7_init:
   bl set_bit
 
   @ NOTE: you MAY want to configure the priority of TIM7.
-  @ put your code here if that's the case
+  ldr r1, =0xe000e400
+  ldr r2, =0x34
+  ldr r0, [r1, r2]
+  // This gives out the priority register in r0, change bits 12-15
+  bic r0, (0b1111 << 28) //(this is shorthand for 1111 logical shifted left by 12) (clear bits)
+  orr r0, (0b0001 << 28) //where xxxx is the new priority value (set new priority)
+  str r0, [r1, r2]
+
 
   pop {r4-r5, lr}
   bx lr
 .size tim7_init, .-tim7_init
-
-.type TIM7_IRQHandler, %function
-@ --parameters--
-@ none
-TIM7_IRQHandler:
-  push {lr}
-
-  @ Your interrupt handler code goes here
-
-  @ Clear interrupt (Section 29.4.4)
-  ldr r0, =ADR_TIM7
-  ldr r1, =OFS_TIMx_SR
-  mov r2, 0
-  bl clear_bit
-
-  pop {lr}
-  bx lr
-.size TIM7_IRQHandler, .-TIM7_IRQHandler
